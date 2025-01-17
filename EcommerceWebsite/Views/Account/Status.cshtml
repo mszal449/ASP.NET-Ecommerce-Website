@@ -1,0 +1,11 @@
+﻿@if (User.Identity.IsAuthenticated)
+{
+    <p>Welcome, @User.Identity.Name!</p>
+    <a href="/Account/Logout">Logout</a>
+}
+else
+{
+    <p>You are not logged in.</p>
+    <a href="/Account/Login">Login</a>
+    <a href="/Account/Register">Register</a>
+}

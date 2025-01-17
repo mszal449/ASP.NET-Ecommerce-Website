@@ -1,0 +1,113 @@
+﻿@model EcommerceWebsite.Models.CartViewModel
+
+@{
+    ViewData["Title"] = "Your Cart";
+}
+<style>
+    .title-container {
+        text-align: center;
+    }
+    .cart-title {
+        padding-top: 2.5rem; 
+        font-size: 1.5rem;
+        line-height: 2rem; 
+        text-align: center;
+    }
+
+    .table {
+        display: table;
+        width: 100%;
+    }
+    
+    tr, td {
+        vertical-align: middle;
+    }
+    
+    .alert-success {
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+</style>
+<div class="container">
+    @if (Model.CartItems.Count > 0)
+    {
+        @using (Html.BeginForm("UpdateCart", "Cart", FormMethod.Post, new { id = "cart-form" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price Each</th>
+                    <th>Actions</th> <!-- Added Actions Column -->
+                </tr>
+                </thead>
+                <tbody>
+                @for (int i = 0; i < Model.CartItems.Count; i++)
+                {
+                    var item = Model.CartItems[i];
+                    <tr>
+                        <td>
+                            @if (item.Product != null)
+                            {
+                                @item.Product.Name
+                            }
+                            else
+                            {
+                                <text>Unknown Product</text>
+                            }
+                        </td>
+                        <td>
+                            <input type="hidden" name="CartItems[@i].ProductId" value="@item.ProductId" />
+                            <input type="number" name="CartItems[@i].Quantity" value="@item.Quantity" min="0" class="form-control" />
+                        </td>
+                        <td>
+                            @if (item.Product != null)
+                            {
+                                @item.Product.Price.ToString("C")
+                            }
+                            else
+                            {
+                                <text>N/A</text>
+                            }
+                        </td>
+                        <td>
+                            <!-- Remove Button -->
+                            <button type="button" class="btn btn-danger" onclick="removeItem(@i)">Remove</button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            <button type="submit" class="btn btn-primary">Update Cart</button>
+        }
+
+        <h3 class="mt-4">
+            Total: @Model.CartItems.Sum(ci => (ci.Product != null ? ci.Quantity * ci.Product.Price : 0)).ToString("C")
+        </h3>
+    }
+    else
+    {
+        <div class="title-container">
+            <p class="cart-title">Your cart is empty.</p>
+            <a href="@Url.Action("Index", "Product")" class="btn btn-primary">Continue Shopping</a>
+        </div>
+        
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function removeItem(index) {
+            // Set the quantity to 0 for the specified cart item
+            const quantityInput = document.getElementsByName(`CartItems[${index}].Quantity`)[0];
+            if (quantityInput) {
+                quantityInput.value = 0;
+            }
+            // Submit the form to update the cart
+            document.getElementById('cart-form').submit();
+        }
+    </script>
+}

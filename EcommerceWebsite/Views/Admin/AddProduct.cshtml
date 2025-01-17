@@ -1,0 +1,32 @@
+@model EcommerceWebsite.Models.CreateProductViewModel
+
+@{
+    ViewData["Title"] = "Create Product";
+}
+
+<h1>Create Product</h1>
+
+<form asp-action="AddProduct" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <div>
+        @Html.LabelFor(m => m.Name)
+        @Html.TextBoxFor(m => m.Name)
+    </div>
+    <div>
+        @Html.LabelFor(m => m.Price)
+        @Html.TextBoxFor(m => m.Price)
+    </div>
+    <div>
+        @Html.LabelFor(m => m.Description)
+        @Html.TextAreaFor(m => m.Description)
+    </div>
+    <div>
+        @Html.LabelFor(m => m.StockQuantity)
+        @Html.TextBoxFor(m => m.StockQuantity)
+    </div>
+    <div>
+        @Html.LabelFor(m => m.ImageFile)
+        @Html.TextBoxFor(m => m.ImageFile, new { type = "file", accept = "image/*" })
+    </div>
+    <button type="submit">Create</button>
+</form>

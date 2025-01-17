@@ -1,0 +1,21 @@
+﻿@model EcommerceWebsite.Models.LoginViewModel
+
+<form asp-action="Login" method="post">
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    <div>
+        <label asp-for="Email"></label>
+        <input asp-for="Email"/>
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+    <div>
+        <label asp-for="Password"></label>
+        <input asp-for="Password"/>
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+    <div>
+        <label asp-for="RememberMe"></label>
+        <input asp-for="RememberMe"/>
+    </div>
+    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+    <button type="submit">Login</button>
+</form>
