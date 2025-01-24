@@ -4,6 +4,12 @@ using Microsoft.AspNetCore.Identity;
 
 namespace EcommerceWebsite.Entities;
 
+public enum OrderState
+{
+    Open,   
+    Placed   
+}
+
 public class Order
 {
     [Key]
@@ -19,6 +25,8 @@ public class Order
     [ForeignKey("Customer")]
     public string? UserId { get; set; }
     public User User { get; set; }
+
+    public OrderState State { get; set; } = OrderState.Open;
 
     public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 }

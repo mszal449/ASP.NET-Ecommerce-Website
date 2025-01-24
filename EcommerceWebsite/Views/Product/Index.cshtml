@@ -1,6 +1,5 @@
-﻿@using EcommerceWebsite.Models.Product
+@using EcommerceWebsite.Models.Product
 @model ProductIndexViewModel
-
 
 @{
     ViewData["Title"] = "Products";
@@ -41,6 +40,7 @@
             <!-- Stock Availability Filter -->
             <label for="Stock">Stock Availability:</label>
             <select id="Stock" name="Stock" asp-items="@(new SelectList(ProductFilterModel.GetStockOptions(), "Value", "Text", Model.ProductFilters.Stock.ToString()))">
+                <option value="NOSELECTEDVALUE">--</option>
             </select>
 
             <!-- Apply Filters Button -->
@@ -67,7 +67,7 @@
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="productId" value="@product.ProductId"/>
                             <input type="number" name="quantity" value="1" class="quantity-input" min="1"/>
-                            <button type="submit" class="buy-button">Add to cart</button>
+                            <button type="submit" class="buy-button" @(product.StockQuantity == 0 ? "disabled" : "")>Add to cart</button>
                         </form>
                     </div>
                 }
@@ -82,7 +82,6 @@
         gap: 20px;
     }
 
-    /* Sidebar Styles */
     .filters {
         width: 25%;
         border: 1px solid #ccc;
@@ -90,6 +89,8 @@
         border-radius: 5px;
         box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
         background-color: #f9f9f9;
+        flex-shrink: 0;
+
     }
 
     .filters h3 {
@@ -110,7 +111,6 @@
         border-radius: 5px;
     }
 
-    /* Product List Styles */
     .product-list {
         flex: 1;
         display: grid;
@@ -139,8 +139,8 @@
 
     .product-image {
         width: 100%;
-        height: 200px; /* Set a fixed height */
-        object-fit: cover; /* Ensure the image covers the area without distortion */
+        height: 200px;
+        object-fit: cover;
         border-radius: 5px;
         margin-bottom: 10px;
     }

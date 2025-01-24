@@ -1,5 +1,9 @@
-﻿@using EcommerceWebsite.Entities
-@using EcommerceWebsite.Helpers
+﻿@using EcommerceWebsite.Data
+@using EcommerceWebsite.Entities
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<User> UserManager
+@inject AppDbContext Context
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,11 +17,15 @@
 </head>
 <body>
 <header>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light w-100">
-        <a class="navbar-brand" href="/">ShopName</a>
+    <nav class="navbar navbar-expand-lg w-100" style="font-weight: 600">
+        <a class="navbar-brand" 
+            style="padding-left: 1rem; 
+            font-weight: 700; 
+            color: #000000;" 
+            href="/">CatPillows</a>
         <ul class="navbar-nav mr-auto">
             <li class="nav-item">
-                <a class="nav-link" href="/Product">Products</a>
+                <a class="nav-link" asp-controller="Product" asp-action="Index">Products</a>
             </li>
         </ul>
         <ul class="navbar-nav ms-auto">
@@ -28,9 +36,11 @@
                         Cart    
                         <span class="">
                             @{
-                                var cart = Context.Session.GetObjectFromJson<List<CartItem>>("Cart") 
-                                           ?? new List<CartItem>();
-                                var cartCount = cart.Sum(ci => ci.Quantity);
+                                var userId = UserManager.GetUserId(User);
+                                var cartCount = Context.Orders
+                                    .Where(o => o.UserId == userId && o.State == OrderState.Open)
+                                    .SelectMany(o => o.OrderItems)
+                                    .Sum(oi => oi.Quantity);
                             }
                             @cartCount
                         </span>
@@ -58,9 +68,9 @@
     </main>
 </div>
 
-<footer class="border-top footer text-muted">
+<footer class="border-top footer text-muted text-center">
     <div class="container">
-        &copy; 2024 - EcommerceWebsite - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        &copy; 2024 - CatPillows
     </div>
 </footer>
 <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>

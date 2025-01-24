@@ -19,12 +19,12 @@ namespace EcommerceWebsite.Controllers
             // Apply name filter
             if (!string.IsNullOrEmpty(filters.Name))
             {
-                products = products.Where(p => p.Name.Contains(filters.Name));
+                products = products.Where(p => p.Name.ToLower().Contains(filters.Name.ToLower()));
             }
 
             if (!string.IsNullOrEmpty(filters.Description))
             {
-                products = products.Where(p => p.Description.Contains(filters.Description));
+                products = products.Where(p => p.Description.ToLower().Contains(filters.Description.ToLower()));
             }
             
             if (filters.MinPrice != null)

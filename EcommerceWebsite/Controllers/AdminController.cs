@@ -6,50 +6,61 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
+using EcommerceWebsite.Models.Admin;
 
 namespace EcommerceWebsite.Controllers
 {
     [Authorize(Roles = "Admin")]
-    public class AdminController : Controller
+    public class AdminController(AppDbContext context) : Controller
     {
-        private readonly AppDbContext _context;
-
-        public AdminController(AppDbContext context)
-        {
-            _context = context;
-        }
-
         // GET: Admin/Index
         [HttpGet]
         public IActionResult Index()
         {
-            var products = _context.Products.ToList();
-            var viewModel = new AdminViewModel
+            return View();
+        }
+        
+        // GET: Admin/Products
+        [HttpGet]
+        public IActionResult Products()
+        {
+            var products = context.Products.ToList();
+            var viewModel = new AdminProductsViewModel
             {
                 Products = products
             };
             return View(viewModel);    
         }
-
-        [HttpPost]
-        public IActionResult Delete(int id)
+        
+        // GET: Admin/Users
+        [HttpGet]
+        public IActionResult Users()
         {
-            var product = _context.Products.Find(id);
+            var users = context.Users.ToList();
+            return View(users);
+        }
+        
+
+        // GET: Admin/DeleteProduct/5
+        [HttpPost]
+        public IActionResult DeleteProduct(int id)
+        {
+            var product = context.Products.Find(id);
             if (product == null)
             {
                 return NotFound();
             }
             
-            _context.Products.Remove(product);
-            _context.SaveChanges();
-            return RedirectToAction("Index");
+            context.Products.Remove(product);
+            context.SaveChanges();
+            return RedirectToAction("Products");
         }
         
         // GET: Admin/Edit/5
         [HttpGet]
         public IActionResult Edit(int id)
         {
-            var product = _context.Products.Find(id);
+            var product = context.Products.Find(id);
             if (product == null)
             {
                 return NotFound();
@@ -64,7 +75,7 @@ namespace EcommerceWebsite.Controllers
         {
             if (ModelState.IsValid)
             {
-                var existingProduct = _context.Products.Find(product.ProductId);
+                var existingProduct = context.Products.Find(product.ProductId);
                 if (existingProduct != null)
                 {
                     existingProduct.Name = product.Name;
@@ -72,19 +83,19 @@ namespace EcommerceWebsite.Controllers
                     existingProduct.Price = product.Price;
                     existingProduct.StockQuantity = product.StockQuantity;
 
-                    if (imageFile != null && imageFile.Length > 0)
+                    if (imageFile is { Length: > 0 })
                     {
                         using var ms = new MemoryStream();
                         imageFile.CopyTo(ms);
                         existingProduct.ImageData = ms.ToArray();
                     }
 
-                    _context.SaveChanges();
-                    return RedirectToAction("Index");
+                    context.SaveChanges();
+                    return RedirectToAction("Products");
                 }
                 ModelState.AddModelError("", "Product not found.");
             }
-            return View(product);
+            return RedirectToAction("Products");
         }
 
         // GET: Admin/AddProduct
@@ -119,10 +130,37 @@ namespace EcommerceWebsite.Controllers
                 product.ImageData = ms.ToArray();
             }
 
-            _context.Products.Add(product);
-            _context.SaveChanges();
+            context.Products.Add(product);
+            context.SaveChanges();
 
-            return RedirectToAction("Index");
+            return RedirectToAction("Products");
+        }
+        
+        // GET: Admin/Browse
+        [HttpGet]
+        public async Task<IActionResult> Orders(OrderState? state)
+        {
+            var ordersQuery = context.Orders
+                .Include(o => o.User)
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .AsQueryable();
+
+            if (state.HasValue)
+            {
+                ordersQuery = ordersQuery.Where(o => o.State == state.Value);
+            }
+
+            var orders = await ordersQuery.ToListAsync();
+
+            var viewModel = new AdminOrdersViewModel
+            {
+                Orders = orders,
+                State = state,
+                OrderStates = AdminOrdersViewModel.GetOrderStates(state)
+            };
+
+            return View(viewModel);
         }
     }
 }

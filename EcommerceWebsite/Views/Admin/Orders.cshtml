@@ -1,0 +1,48 @@
+@model EcommerceWebsite.Models.Admin.AdminOrdersViewModel
+
+@{
+    ViewData["Title"] = "Orders";
+}
+
+<h2>Browse Orders</h2>
+
+<form method="get" asp-action="Orders">
+    <div class="form-group">
+        <label for="State">Filter by State</label>
+        <select id="State" name="state" asp-items="@(new SelectList(Model.OrderStates, "Value", "Text", Model.State?.ToString()))">
+            <option value="">All</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Filter</button>
+</form>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>Order ID</th>
+        <th>User</th>
+        <th>Order Date</th>
+        <th>State</th>
+        <th>Items</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var order in Model.Orders)
+    {
+        <tr>
+            <td>@order.OrderId</td>
+            <td>@order.User.Name (@order.User.Email)</td>
+            <td>@order.OrderDate</td>
+            <td>@order.State</td>
+            <td>
+                <ul>
+                    @foreach (var item in order.OrderItems)
+                    {
+                        <li>@item.Product.Name - @item.Quantity</li>
+                    }
+                </ul>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

@@ -1,4 +1,4 @@
-﻿@model EcommerceWebsite.Models.CartViewModel
+﻿@model EcommerceWebsite.Models.Cart.CartViewModel
 
 @{
     ViewData["Title"] = "Your Cart";
@@ -8,9 +8,9 @@
         text-align: center;
     }
     .cart-title {
-        padding-top: 2.5rem; 
+        padding-top: 2.5rem;
         font-size: 1.5rem;
-        line-height: 2rem; 
+        line-height: 2rem;
         text-align: center;
     }
 
@@ -18,11 +18,11 @@
         display: table;
         width: 100%;
     }
-    
+
     tr, td {
         vertical-align: middle;
     }
-    
+
     .alert-success {
         margin-bottom: 1rem;
         text-align: center;
@@ -87,6 +87,14 @@
         <h3 class="mt-4">
             Total: @Model.CartItems.Sum(ci => (ci.Product != null ? ci.Quantity * ci.Product.Price : 0)).ToString("C")
         </h3>
+
+        <!-- Change Order Status Button -->
+        @using (Html.BeginForm("Checkout", "Cart", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="orderId" value="/* Order ID here */" />
+            <button type="submit" class="btn btn-secondary">Place Order</button>
+        }
     }
     else
     {
@@ -94,7 +102,7 @@
             <p class="cart-title">Your cart is empty.</p>
             <a href="@Url.Action("Index", "Product")" class="btn btn-primary">Continue Shopping</a>
         </div>
-        
+
     }
 </div>
 

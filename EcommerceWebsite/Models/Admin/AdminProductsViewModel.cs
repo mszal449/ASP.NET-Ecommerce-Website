@@ -2,7 +2,7 @@
 
 namespace EcommerceWebsite.Models
 {
-    public class AdminViewModel
+    public class AdminProductsViewModel
     {
         public List<Entities.Product> Products { get; set; }
 

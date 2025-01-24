@@ -1,35 +1,36 @@
-﻿using System.Linq;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using EcommerceWebsite.Data;
 using EcommerceWebsite.Entities;
-using EcommerceWebsite.Helpers;
 using EcommerceWebsite.Models;
+using EcommerceWebsite.Models.Cart;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace EcommerceWebsite.Controllers
 {
     [Authorize]
-    public class CartController(AppDbContext context) : Controller
+    public class CartController(AppDbContext context, UserManager<User> userManager) : Controller
     {
         // GET: /Cart/Index
         public IActionResult Index()
         {
-            var sessionCart = HttpContext.Session.GetObjectFromJson<List<CartItem>>("Cart") 
-                             ?? new List<CartItem>();
+            var userId = userManager.GetUserId(User);
+            var openOrder = context.Orders
+                                   .Include(o => o.OrderItems)
+                                    .ThenInclude(oi => oi.Product)
+                                   .FirstOrDefault(o => o.UserId == userId && o.State == OrderState.Open);
 
-            // Enrich each CartItem with Product details
-            var enrichedCart = sessionCart.Select(ci =>
+            var vm = new CartViewModel
             {
-                var product = context.Products.FirstOrDefault(p => p.ProductId == ci.ProductId);
-                return new CartItem
+                CartItems = openOrder?.OrderItems.Select(oi => new CartItem
                 {
-                    ProductId = ci.ProductId,
-                    Quantity = ci.Quantity,
-                    Product = product
-                };
-            }).ToList();
+                    ProductId = oi.ProductId,
+                    Quantity = oi.Quantity,
+                    Product = oi.Product
+                }).ToList() ?? new List<CartItem>()
+            };
 
-            var vm = new CartViewModel { CartItems = enrichedCart };
             return View(vm);
         }
 
@@ -44,21 +45,42 @@ namespace EcommerceWebsite.Controllers
                 return RedirectToAction("Index");
             }
 
-            var cart = HttpContext.Session.GetObjectFromJson<List<CartItem>>("Cart") 
-                       ?? new List<CartItem>();
+            var userId = userManager.GetUserId(User);
+            var openOrder = context.Orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(orderItem => orderItem.Product)
+                .FirstOrDefault(o => o.UserId == userId && o.State == OrderState.Open);
 
-            var existingItem = cart.FirstOrDefault(ci => ci.ProductId == productId);
+            if (openOrder == null)
+            {
+                openOrder = new Order
+                {
+                    UserId = userId,
+                    OrderDate = DateTime.Now,
+                    State = OrderState.Open
+                };
+                context.Orders.Add(openOrder);
+            }
+
+            var existingItem = openOrder.OrderItems.FirstOrDefault(oi => oi.ProductId == productId);
             if (existingItem == null)
             {
-                cart.Add(new CartItem { ProductId = productId, Quantity = quantity });
+                openOrder.OrderItems.Add(new OrderItem
+                {
+                    ProductId = productId,
+                    Quantity = quantity,
+                    Product = product
+                });
             }
             else
             {
                 existingItem.Quantity += quantity;
             }
 
-            HttpContext.Session.SetObjectAsJson("Cart", cart);
-            
+            openOrder.TotalAmount = openOrder.OrderItems.Sum(oi => oi.Quantity * oi.Product.Price);
+
+            context.SaveChanges();
+
             TempData["SuccessMessage"] = "Product successfully added to your cart.";
             return RedirectToAction("Index", "Product");
         }
@@ -68,28 +90,75 @@ namespace EcommerceWebsite.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult UpdateCart(CartViewModel model)
         {
-            var sessionCart = HttpContext.Session.GetObjectFromJson<List<CartItem>>("Cart") 
-                             ?? new List<CartItem>();
+            var userId = userManager.GetUserId(User);
+            var openOrder = context.Orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(orderItem => orderItem.Product)
+                .FirstOrDefault(o => o.UserId == userId && o.State == OrderState.Open);
+
+            if (openOrder == null)
+            {
+                return RedirectToAction("Index");
+            }
 
             foreach (var item in model.CartItems.ToList())
             {
-                var cartItem = sessionCart.FirstOrDefault(ci => ci.ProductId == item.ProductId);
-                if (cartItem != null)
+                var orderItem = openOrder.OrderItems.FirstOrDefault(oi => oi.ProductId == item.ProductId);
+                if (orderItem == null) continue;
+                if (item.Quantity > 0)
                 {
-                    if (item.Quantity > 0)
-                    {
-                        cartItem.Quantity = item.Quantity;
-                    }
-                    else
-                    {
-                        // Remove item if quantity is 0
-                        sessionCart.Remove(cartItem);
-                    }
+                    orderItem.Quantity = item.Quantity;
+                }
+                else
+                {
+                    // Remove item if quantity is 0
+                    openOrder.OrderItems.Remove(orderItem);
                 }
             }
 
-            HttpContext.Session.SetObjectAsJson("Cart", sessionCart);
+            openOrder.TotalAmount = openOrder.OrderItems.Sum(oi => oi.Quantity * oi.Product.Price);
+            context.SaveChanges();
+
             return RedirectToAction("Index");
+        }
+
+        // POST: /Cart/Checkout
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Checkout()
+        {
+            var userId = userManager.GetUserId(User);
+            var openOrder = context.Orders.Include(order => order.OrderItems)
+                .FirstOrDefault(o => o.UserId == userId && o.State == OrderState.Open);
+
+            if (openOrder == null || openOrder.OrderItems.Count == 0)
+            {
+                TempData["ErrorMessage"] = "Your cart is empty.";
+                return RedirectToAction("Index");
+            }
+
+            openOrder.State = OrderState.Placed;
+            openOrder.OrderDate = DateTime.Now;
+
+            context.SaveChanges();
+
+            TempData["SuccessMessage"] = "Your order has been placed successfully.";
+            return RedirectToAction("Index", "Product");
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> ChangeOrderStatus(int orderId)
+        {
+            var order = await context.Orders.FindAsync(orderId);
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            order.State = OrderState.Placed;
+            await context.SaveChangesAsync();
+
+            return RedirectToAction("Index", "Product");
         }
     }
 }
