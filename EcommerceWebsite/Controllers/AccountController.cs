@@ -31,7 +31,8 @@ namespace EcommerceWebsite.Controllers
                     UserName = model.Email,
                     Email = model.Email,
                     Name = model.Name,
-                    PhoneNumber = model.PhoneNumber
+                    PhoneNumber = model.PhoneNumber,
+                    IsAdmin = false
                 };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)

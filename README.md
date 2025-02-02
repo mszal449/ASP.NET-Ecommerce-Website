@@ -2,11 +2,16 @@
 
 ## Overview
 
-EcommerceWebsite is an ASP.NET Core MVC application that allows users to browse products, add items to their cart, and manage their purchases. This guide provides instructions on how to set up and run the project locally.
+EcommerceWebsite is an ASP.NET Core MVC application that allows users to browse products, add items to their cart, and manage their purchases. This guide provides instructions on how to set up and run the project locally. Project created as a final project for ASP.NET course at Compter Science at University of Wroclaw.
+
+## Used technologies:
+- ASP.NET CORE MVC - backend and frontend
+- SQLite - database
+- Identity ASP.NET Core - authorization
 
 ## Prerequisites
 
-- **.NET 6 SDK or later**: [Download here](https://dotnet.microsoft.com/download)
+- **.NET 6 SDK or later**
 - **SQL Server**: Ensure you have SQL Server installed. You can use SQL Server Express if preferred.
 - **Visual Studio 2022** or any other code editor of your choice.
 
@@ -15,7 +20,7 @@ EcommerceWebsite is an ASP.NET Core MVC application that allows users to browse 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/EcommerceWebsite.git
+git clone https://github.com/mszal449/ASP.NET-Ecommerce-Website.git
 cd EcommerceWebsite/EcommerceWebsite
 ```
 

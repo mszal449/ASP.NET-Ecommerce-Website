@@ -17,6 +17,9 @@ namespace EcommerceWebsite.Entities
         [Required]
         [MaxLength(15)]
         public string PhoneNumber { get; set; }
+
+        [Required]
+        public bool IsAdmin { get; set; }
         
         public ICollection<Order> Orders { get; set; } = new List<Order>();
     }
